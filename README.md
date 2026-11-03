@@ -2,7 +2,7 @@
 
 > **Hackatón IIA · UADE · 3.4.257.**
 
-**Integrantes:** Camila Roberts · Tomas Perez Genestouse
+**Integrantes:** Camila Roberts · <completar nombre y apellido>
 **IA declarada:** ChatGPT
 **Pista:** Reglas
 **Publicación en LinkedIn:** pendiente
@@ -41,9 +41,7 @@ La tercera regla es deliberadamente conservadora porque en esta problemática el
 
 No se utiliza la columna `resultado_real` para decidir un caso nuevo. Tampoco se usa el nombre del conjunto (entrenamiento/prueba) como entrada del sistema.
 
-**Cómo se corre en vivo.** Hay dos opciones equivalentes. La más rápida para la mesa es abrir el notebook `T08_colab.ipynb` en Google Colab: [Abrir T08 en Colab](https://colab.research.google.com/github/tuttipg/hackaton-iia-uade-2026/blob/main/T08_colab.ipynb). Ejecuten la primera celda y luego la celda marcada **EJECUTAR ESTA CELDA EN LA MESA**, ingresando los cuatro valores del caso nuevo.
-
-Como alternativa, el archivo `T08_sistema.py` implementa exactamente las mismas reglas y puede ejecutarse de dos formas:
+**Cómo se corre en vivo.** Hay dos opciones equivalentes. La más rápida para la mesa es abrir el notebook `T08_colab.ipynb` en Google Colab: [Abrir T08 en Colab](https://colab.research.google.com/github/tuttipg/hackaton-iia-uade-2026/blob/main/T08_colab.ipynb). Ejecuten la primera celda y luego la celda marcada **EJECUTAR ESTA CELDA EN LA MESA**, ingresando los cuatro valores del caso nuevo.\n\nComo alternativa, el archivo `T08_sistema.py` implementa exactamente las mismas reglas y puede ejecutarse de dos formas:
 
 ```bash
 python T08_sistema.py
@@ -135,6 +133,4 @@ Los datos mensuales del jugador entran al sistema de reglas. El modelo produce S
 
 | Corrida | Nota | Agujero que encontró | Qué cambiamos |
 |---|---:|---|---|
-| 1 | 9,5/10 | Faltaba explicar si la prueba mostraba sobreajuste o generalización. También cuestionó R2 como proxy y preguntó por los umbrales. | Se revisó la explicación y se evaluaron alternativas. |
-| 2 | 9/10 | La versión modificada quedó desincronizada y perdió coherencia entre sensibilidad y reglas. | Se volvió a revisar la consistencia entre README, código y métricas. |
-| 3 | 8,5/10 | El evaluador recibió/evaluó una versión anterior y siguió señalando inconsistencias. | Se decidió volver a la versión de la corrida 1, que fue la de mejor evaluación y funcionamiento. |
+| 1 | pendiente | pendiente | pendiente |
