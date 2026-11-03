@@ -26,12 +26,11 @@
 
 **Cómo decide.** Se usa un sistema de reglas si-entonces. Predice **SÍ** cuando se cumple al menos una de estas reglas:
 
-1. **R1 — carga competitiva alta + recuperación limitada:** si hay **20 o más partidas oficiales** y además hay **5 o menos días libres** o **6 horas o menos de sueño**, entonces SÍ.
+1. **R1 — carga competitiva alta:** si hay **20 o más partidas oficiales**, entonces SÍ.
 2. **R2 — muy pocos días libres + práctica alta:** si hay **2 o menos días libres** y **11 o más horas de práctica por día**, entonces SÍ.
-3. **R3 — recuperación insuficiente:** si hay **4 o menos días libres** y **6 horas o menos de sueño**, entonces SÍ.
-4. Si no se cumple ninguna regla, predice **NO**.
+3. Si no se cumple ninguna regla, predice **NO**.
 
-La tercera regla es deliberadamente conservadora porque en esta problemática el falso negativo tiene una consecuencia más grave que el falso positivo.
+Los umbrales de esta versión se fijaron a partir de los **casos 1–14 de entrenamiento**. R1 separa los dos positivos de entrenamiento con mayor carga competitiva (casos 5 y 6), y R2 separa los otros tres positivos (2, 4 y 11) mediante la combinación de pocos días libres y práctica alta. Los casos 15–20 se usan únicamente para medir.
 
 **Variables que usa y por qué.**
 - **Días libres:** representa oportunidad de recuperación.
@@ -65,7 +64,7 @@ devuelve **SÍ**, porque activa R3.
 
 | Caso inventado | Valores | Salida del sistema |
 |---|---|---|
-| A | 4 días libres, 6 h de sueño, 9 partidas, 8 h de práctica | SÍ — R3 |
+| A | 1 día libre, 8 h de sueño, 21 partidas, 6 h de práctica | SÍ — R1 |
 | B | 7 días libres, 7,5 h de sueño, 15 partidas, 10 h de práctica | NO — ninguna regla se activa |
 
 ## 3. Medición
@@ -83,27 +82,27 @@ La lógica de decisión usa únicamente las cuatro variables disponibles en el m
 
 | | Predice SÍ | Predice NO |
 |---|---:|---:|
-| **Real SÍ** | VP = 3 | FN = 0 |
-| **Real NO** | FP = 0 | VN = 3 |
+| **Real SÍ** | VP = 2 | FN = 1 |
+| **Real NO** | FP = 1 | VN = 2 |
 
 | Métrica | Entrenamiento | Prueba |
 |---|---:|---:|
-| Exactitud | 100% | 100% |
-| Precisión | 100% | 100% |
-| Sensibilidad | 100% | 100% |
-| Especificidad | 100% | 100% |
+| Exactitud | 100% | 66,7% |
+| Precisión | 100% | 66,7% |
+| Sensibilidad | 100% | 66,7% |
+| Especificidad | 100% | 66,7% |
 
-**Entrenamiento contra prueba.** En estos 20 casos sintéticos el sistema obtiene el mismo resultado perfecto en entrenamiento y prueba. Eso **no demuestra** que generalice a jugadores reales: la prueba tiene solo 6 casos y pertenece al mismo conjunto sintético preparado para la actividad. El 100% debe interpretarse como desempeño en este benchmark, no como evidencia de eficacia universal.
+**Entrenamiento contra prueba.** El sistema pasa de **100% en entrenamiento a 66,7% en prueba**. Esa caída indica que las reglas ajustadas sobre los casos 1–14 **no generalizan perfectamente** a casos nuevos y es compatible con cierto sobreajuste al conjunto de entrenamiento. Aun así, en prueba supera la línea base trivial del 50%. Por lo tanto, hablamos de **generalización parcial**, no de una solución perfecta. Además, son solo 6 casos sintéticos de prueba, por lo que el resultado no demuestra eficacia sobre jugadores reales.
 
 ## 4. El error más caro
 
 El error más caro es el **falso negativo**: predecir NO cuando el jugador realmente iba a sufrir una caída fuerte de rendimiento. Según la ficha, esto implica no detectar el agotamiento, que el jugador rinda mal y que incluso pueda dejar el equipo.
 
-Por ese motivo el sistema incluye R3, una regla conservadora de recuperación insuficiente, y se prioriza la **sensibilidad**. Un falso positivo también tiene costo —dar descanso a quien estaba bien y perder ritmo—, pero su consecuencia es menos grave que ignorar un burnout real.
+Por ese motivo se prioriza la **sensibilidad** al evaluar el sistema. En la primera versión se había agregado R3 para reducir falsos negativos, pero esa regla se ajustó después de haber observado la prueba y por eso se eliminó: preferimos una medición honesta antes que optimizar retrospectivamente los casos 15–20. Un falso positivo también tiene costo —dar descanso a quien estaba bien y perder ritmo—, pero su consecuencia es menos grave que ignorar un burnout real.
 
 ## 5. ¿Comparado contra qué?
 
-**Línea base trivial.** Como en entrenamiento hay 9 casos NO de 14, un sistema que respondiera siempre NO tendría **64,3% de exactitud** en entrenamiento, pero **0% de sensibilidad**: no detectaría ningún caso de riesgo. En prueba hay 3 NO de 6, por lo que la misma línea base tendría **50% de exactitud** y nuevamente **0% de sensibilidad**. Nuestro sistema supera esa línea base y, sobre todo, sí detecta los positivos.
+**Línea base trivial.** Como en entrenamiento hay 9 casos NO de 14, un sistema que respondiera siempre NO tendría **64,3% de exactitud** en entrenamiento, pero **0% de sensibilidad**: no detectaría ningún caso de riesgo. En prueba hay 3 NO de 6, por lo que la misma línea base tendría **50% de exactitud** y nuevamente **0% de sensibilidad**. Nuestro sistema obtiene **66,7% de exactitud y 66,7% de sensibilidad** en prueba: supera la línea base, aunque todavía deja un falso negativo.
 
 | Checklist (Clase 6) | Respuesta |
 |---|---|
@@ -133,4 +132,13 @@ Los datos mensuales del jugador entran al sistema de reglas. El modelo produce S
 
 | Corrida | Nota | Agujero que encontró | Qué cambiamos |
 |---|---:|---|---|
-| 1 | pendiente | pendiente | pendiente |
+| 1 | 9,5/10 | Faltaba explicar sobreajuste/generalización; además cuestionó R2 como posible proxy y preguntó si los umbrales habían mirado prueba. | Eliminamos R3 porque estaba ajustada después de observar prueba, rehacemos la medición con reglas fijadas desde entrenamiento y explicamos generalización parcial. |
+
+
+### Aclaraciones posteriores a la corrida 1
+
+**¿R2 predice agotamiento o mide cuánto entrena?** Las horas de práctica no son burnout ni el objetivo. Son solamente un **proxy de carga/compromiso**. R2 no usa práctica sola: exige además **2 o menos días libres**. Aun así, reconocemos que esa relación puede fallar fuera del benchmark; por eso la consecuencia del modelo debe ser una alerta para evaluación del cuerpo técnico, no un diagnóstico automático.
+
+**¿Los umbrales salieron de prueba?** La primera versión incluyó R3 después de observar los casos de prueba, lo que hacía que el 100% de prueba fuera metodológicamente débil. Después de la corrida 1 corregimos esto: eliminamos R3 y dejamos solo reglas justificables con los casos 1–14. La prueba se recalculó sin volver a ajustar las reglas.
+
+**¿Qué hacía el sistema antes de R3?** Sin R3, el caso 20 de prueba queda como falso negativo. R3 lo convertía en verdadero positivo y elevaba artificialmente la prueba de 83,3% a 100% en la versión anterior. Precisamente por eso decidimos eliminarla y reportar el desempeño honesto de la versión final.
