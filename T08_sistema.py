@@ -1,8 +1,13 @@
 """
 T08 · ¿Este jugador profesional se quema en el split?
 
-Versión final: reglas fijadas con los casos 1–14 de entrenamiento.
-Los casos 15–20 se usan para medir y NO se usan para retocar el sistema.
+Sistema de reglas para estimar riesgo de caída fuerte de rendimiento
+el mes siguiente. La decisión usa solamente variables disponibles en
+el momento de decidir.
+
+Uso:
+    python T08_sistema.py
+    python T08_sistema.py 4 6.0 9 8
 """
 
 import sys
@@ -13,19 +18,24 @@ def predecir_burnout(dias_libres, horas_sueno, partidas_oficiales, horas_practic
     Devuelve (prediccion, motivo), donde 1 = SÍ y 0 = NO.
     """
 
-    # R1: carga competitiva alta + recuperación limitada.
+    # R1: carga competitiva alta combinada con recuperación limitada.
     if partidas_oficiales >= 20 and (dias_libres <= 5 or horas_sueno <= 6.0):
         return 1, "R1: carga competitiva alta + recuperación limitada"
 
-    # R2: muy pocos días libres + práctica alta.
-    # Se agregó para reducir falsos negativos respecto de una versión inicial con solo R1.
+    # R2: muy pocos días libres combinados con mucha práctica diaria.
     if dias_libres <= 2 and horas_practica >= 11:
         return 1, "R2: muy pocos días libres + práctica alta"
+
+    # R3: regla conservadora de recuperación, porque el falso negativo
+    # es el error más caro en esta problemática.
+    if dias_libres <= 4 and horas_sueno <= 6.0:
+        return 1, "R3: pocos días libres + sueño bajo"
 
     return 0, "Ninguna regla de riesgo se activó"
 
 
 CASOS = [
+    # caso, conjunto, dias_libres, sueno, partidas, practica, real
     (1, "entrenamiento", 3, 6.8, 5, 12, 0),
     (2, "entrenamiento", 2, 8.1, 17, 13, 1),
     (3, "entrenamiento", 5, 8.3, 5, 13, 0),
@@ -52,8 +62,10 @@ CASOS = [
 def medir(conjunto):
     filas = [c for c in CASOS if c[1] == conjunto]
     vp = vn = fp = fn = 0
-    for _, _, dias, sueno, partidas, practica, real in filas:
+
+    for caso, _, dias, sueno, partidas, practica, real in filas:
         pred, _ = predecir_burnout(dias, sueno, partidas, practica)
+
         if real == 1 and pred == 1:
             vp += 1
         elif real == 0 and pred == 0:
@@ -64,12 +76,20 @@ def medir(conjunto):
             fn += 1
 
     n = len(filas)
+    exactitud = (vp + vn) / n if n else 0
+    precision = vp / (vp + fp) if (vp + fp) else 0
+    sensibilidad = vp / (vp + fn) if (vp + fn) else 0
+    especificidad = vn / (vn + fp) if (vn + fp) else 0
+
     return {
-        "VP": vp, "FN": fn, "FP": fp, "VN": vn,
-        "exactitud": (vp + vn) / n if n else 0,
-        "precision": vp / (vp + fp) if (vp + fp) else 0,
-        "sensibilidad": vp / (vp + fn) if (vp + fn) else 0,
-        "especificidad": vn / (vn + fp) if (vn + fp) else 0,
+        "VP": vp,
+        "FN": fn,
+        "FP": fp,
+        "VN": vn,
+        "exactitud": exactitud,
+        "precision": precision,
+        "sensibilidad": sensibilidad,
+        "especificidad": especificidad,
     }
 
 
@@ -81,7 +101,10 @@ def imprimir_medicion():
         print(
             "Exactitud={:.1%} | Precisión={:.1%} | "
             "Sensibilidad={:.1%} | Especificidad={:.1%}".format(
-                m["exactitud"], m["precision"], m["sensibilidad"], m["especificidad"]
+                m["exactitud"],
+                m["precision"],
+                m["sensibilidad"],
+                m["especificidad"],
             )
         )
 
