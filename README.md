@@ -40,7 +40,9 @@
 
 No se utiliza la columna `resultado_real` para decidir un caso nuevo. Tampoco se usa el nombre del conjunto (entrenamiento/prueba) como entrada del sistema.
 
-**Cómo se corre en vivo.** Hay dos opciones equivalentes. La más rápida para la mesa es abrir el notebook `T08_colab.ipynb` en Google Colab: [Abrir T08 en Colab](https://colab.research.google.com/github/tuttipg/hackaton-iia-uade-2026/blob/main/T08_colab.ipynb). Ejecuten la primera celda y luego la celda marcada **EJECUTAR ESTA CELDA EN LA MESA**, ingresando los cuatro valores del caso nuevo.\n\nComo alternativa, el archivo `T08_sistema.py` implementa exactamente las mismas reglas y puede ejecutarse de dos formas:
+**Cómo se corre en vivo.** Hay dos opciones equivalentes. La más rápida para la mesa es abrir el notebook `T08_colab.ipynb` en Google Colab: [Abrir T08 en Colab](https://colab.research.google.com/github/tuttipg/hackaton-iia-uade-2026/blob/main/T08_colab.ipynb). Ejecuten la primera celda y luego la celda marcada **EJECUTAR ESTA CELDA EN LA MESA**, ingresando los cuatro valores del caso nuevo.
+
+Como alternativa, el archivo `T08_sistema.py` implementa exactamente las mismas reglas y puede ejecutarse de dos formas:
 
 ```bash
 python T08_sistema.py
@@ -130,14 +132,7 @@ Los datos mensuales del jugador entran al sistema de reglas. El modelo produce S
 | 1 | Revisar las bases, la ficha T08, los datos y la rúbrica. | La estructura exigida del README, la separación entrenamiento/prueba y la necesidad de distinguir objetivo de métrica. | Usar datos externos o cambiar la división 1–14 / 15–20, porque las bases lo prohíben. |
 | 2 | Proponer un sistema que pudiera ejecutarse y explicarse en vivo. | Un sistema de reglas simple, trazable y reproducible. | Una solución opaca o innecesariamente compleja, porque dificultaría la defensa y la ejecución en mesa. |
 | 3 | Analizar el costo de los errores. | Priorizar sensibilidad porque el falso negativo es el error más caro según la ficha. | Tratar la exactitud como única métrica, porque una línea base trivial podría obtener una exactitud engañosa. |
-| 4 | Revisar el sistema frente a la checklist de Clase 6. | Aclarar qué datos, métricas, comparador y evaluador se usan, y advertir que 100% en 6 casos de prueba no prueba generalización real. | Presentar el 100% del benchmark como garantía de funcionamiento universal. |
-
-### Corridas contra el evaluador
-
-| Corrida | Nota | Agujero que encontró | Qué cambiamos |
-|---|---:|---|---|
-| 1 | 9,5/10 | Faltaba explicar sobreajuste/generalización; además cuestionó R2 como posible proxy y preguntó si los umbrales habían mirado prueba. | Eliminamos R3 porque estaba ajustada después de observar prueba, rehacemos la medición con reglas fijadas desde entrenamiento y explicamos generalización parcial. |
-
+| 4 | Revisar el sistema frente a la checklist de Clase 6. | Aclarar qué datos, métricas, comparador y evaluador se usan, y explicar la diferencia entre entrenamiento y prueba. | Presentar el benchmark como garantía de funcionamiento universal o retocar reglas para corregir errores ya vistos en prueba. |
 
 ### Aclaraciones posteriores a las corridas del evaluador
 
