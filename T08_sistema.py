@@ -1,13 +1,9 @@
 """
 T08 · ¿Este jugador profesional se quema en el split?
 
-Sistema de reglas para estimar riesgo de caída fuerte de rendimiento
-el mes siguiente. La decisión usa solamente variables disponibles en
-el momento de decidir.
-
-Uso:
-    python T08_sistema.py
-    python T08_sistema.py 4 6.0 9 8
+Versión corregida después de la corrida 1 del evaluador.
+Las reglas se fijan usando únicamente los casos 1–14 de entrenamiento.
+Los casos 15–20 se usan solo para medir.
 """
 
 import sys
@@ -18,18 +14,16 @@ def predecir_burnout(dias_libres, horas_sueno, partidas_oficiales, horas_practic
     Devuelve (prediccion, motivo), donde 1 = SÍ y 0 = NO.
     """
 
-    # R1: carga competitiva alta combinada con recuperación limitada.
-    if partidas_oficiales >= 20 and (dias_libres <= 5 or horas_sueno <= 6.0):
-        return 1, "R1: carga competitiva alta + recuperación limitada"
+    # R1: patrón observado en entrenamiento:
+    # los casos positivos 5 y 6 tienen al menos 20 partidas oficiales.
+    if partidas_oficiales >= 20:
+        return 1, "R1: carga competitiva alta (20 o más partidas oficiales)"
 
-    # R2: muy pocos días libres combinados con mucha práctica diaria.
+    # R2: patrón observado en entrenamiento:
+    # los casos positivos 2, 4 y 11 combinan muy pocos días libres
+    # con práctica diaria alta.
     if dias_libres <= 2 and horas_practica >= 11:
         return 1, "R2: muy pocos días libres + práctica alta"
-
-    # R3: regla conservadora de recuperación, porque el falso negativo
-    # es el error más caro en esta problemática.
-    if dias_libres <= 4 and horas_sueno <= 6.0:
-        return 1, "R3: pocos días libres + sueño bajo"
 
     return 0, "Ninguna regla de riesgo se activó"
 
@@ -76,20 +70,15 @@ def medir(conjunto):
             fn += 1
 
     n = len(filas)
-    exactitud = (vp + vn) / n if n else 0
-    precision = vp / (vp + fp) if (vp + fp) else 0
-    sensibilidad = vp / (vp + fn) if (vp + fn) else 0
-    especificidad = vn / (vn + fp) if (vn + fp) else 0
-
     return {
         "VP": vp,
         "FN": fn,
         "FP": fp,
         "VN": vn,
-        "exactitud": exactitud,
-        "precision": precision,
-        "sensibilidad": sensibilidad,
-        "especificidad": especificidad,
+        "exactitud": (vp + vn) / n if n else 0,
+        "precision": vp / (vp + fp) if (vp + fp) else 0,
+        "sensibilidad": vp / (vp + fn) if (vp + fn) else 0,
+        "especificidad": vn / (vn + fp) if (vn + fp) else 0,
     }
 
 
@@ -101,10 +90,7 @@ def imprimir_medicion():
         print(
             "Exactitud={:.1%} | Precisión={:.1%} | "
             "Sensibilidad={:.1%} | Especificidad={:.1%}".format(
-                m["exactitud"],
-                m["precision"],
-                m["sensibilidad"],
-                m["especificidad"],
+                m["exactitud"], m["precision"], m["sensibilidad"], m["especificidad"]
             )
         )
 
