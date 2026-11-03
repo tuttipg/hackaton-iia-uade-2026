@@ -41,7 +41,7 @@ La tercera regla es deliberadamente conservadora porque en esta problemática el
 
 No se utiliza la columna `resultado_real` para decidir un caso nuevo. Tampoco se usa el nombre del conjunto (entrenamiento/prueba) como entrada del sistema.
 
-**Cómo se corre en vivo.** El archivo `T08_sistema.py` implementa exactamente las reglas anteriores. Puede ejecutarse de dos formas:
+**Cómo se corre en vivo.** Hay dos opciones equivalentes. La más rápida para la mesa es abrir el notebook `T08_colab.ipynb` en Google Colab: [Abrir T08 en Colab](https://colab.research.google.com/github/tuttipg/hackaton-iia-uade-2026/blob/main/T08_colab.ipynb). Ejecuten la primera celda y luego la celda marcada **EJECUTAR ESTA CELDA EN LA MESA**, ingresando los cuatro valores del caso nuevo.\n\nComo alternativa, el archivo `T08_sistema.py` implementa exactamente las mismas reglas y puede ejecutarse de dos formas:
 
 ```bash
 python T08_sistema.py
