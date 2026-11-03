@@ -133,4 +133,9 @@ Los datos mensuales del jugador entran al sistema de reglas. El modelo produce S
 
 | Corrida | Nota | Agujero que encontró | Qué cambiamos |
 |---|---:|---|---|
-| 1 | pendiente | pendiente | pendiente |
+| 1 | **9,5/10** | Faltaba explicar si el resultado de prueba mostraba sobreajuste o generalización. También cuestionó si R2 confundía horas de práctica con agotamiento y preguntó si los umbrales se habían elegido mirando prueba. | Se discutió explícitamente la diferencia entre objetivo y proxy, y se revisó el riesgo de ajustar reglas usando prueba. |
+| 2 | **9/10** | El README y el código habían quedado desincronizados; además la versión modificada decía priorizar sensibilidad aunque había eliminado la regla que reducía falsos negativos. | Se sincronizaron código, README y Colab y se revisó cómo justificar el cambio orientado a reducir falsos negativos. |
+| 3 | **8,5/10** | Persistían inconsistencias de una versión intermedia y faltaba registrar la corrida 2. | Se revisó el historial, se detectó que las modificaciones posteriores estaban empeorando claridad y coherencia, y se decidió volver a la versión técnica original que había obtenido 9,5. |
+| 4 | **9/10** | La versión original volvió a ser consistente y reproducible, pero el evaluador señaló que R3 podía haber sido ajustada después de mirar prueba y que la bitácora todavía no reflejaba las corridas previas. | No se cambiaron nuevamente las reglas: el sistema ya estaba habilitado para la mesa. Se completó la bitácora con las cuatro corridas y se dejó registrado el riesgo metodológico señalado sobre R3. |
+
+**Decisión final.** Después de probar variantes entre las corridas 1 y 3, volvimos a la versión técnica de la **corrida 1**, que fue la más clara y obtuvo **9,5/10**. Se conservan las corridas posteriores como parte de la bitácora real del proceso. No se presentan sus cambios intermedios como si fueran mejoras definitivas: sirvieron para detectar problemas de consistencia, generalización y posible ajuste al conjunto de prueba.
