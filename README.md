@@ -2,7 +2,7 @@
 
 > **Hackatón IIA · UADE · 3.4.257.**
 
-**Integrantes:** Camila Roberts · <completar nombre y apellido>
+**Integrantes:** Camila Roberts · <completar Tomas Perez Genestouse>
 **IA declarada:** ChatGPT
 **Pista:** Reglas
 **Publicación en LinkedIn:** pendiente
