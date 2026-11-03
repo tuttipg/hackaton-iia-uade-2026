@@ -26,12 +26,11 @@
 
 **Cómo decide.** Se usa un sistema de reglas si-entonces. Predice **SÍ** cuando se cumple al menos una de estas reglas:
 
-1. **R1 — carga competitiva alta:** si hay **20 o más partidas oficiales**, entonces SÍ.
+1. **R1 — carga competitiva alta + recuperación limitada:** si hay **20 o más partidas oficiales** y además hay **5 o menos días libres** o **6 horas o menos de sueño**, entonces SÍ.
 2. **R2 — muy pocos días libres + práctica alta:** si hay **2 o menos días libres** y **11 o más horas de práctica por día**, entonces SÍ.
-3. **R3 — pocos días libres + sueño bajo:** si hay **4 o menos días libres** y **6 horas o menos de sueño**, entonces SÍ.
-4. Si no se cumple ninguna regla, predice **NO**.
+3. Si no se cumple ninguna regla, predice **NO**.
 
-**De dónde salen los umbrales.** Las tres reglas se justifican con patrones de los casos **1–14 de entrenamiento**. R1 captura los positivos 5 y 6 por alta carga competitiva. R2 captura los positivos 2, 4 y 11 por combinación de muy pocos días libres y práctica alta. R3 está orientada al error más caro: los positivos 4 y 11 combinan pocos días libres con sueño bajo, y ningún negativo de entrenamiento cumple simultáneamente `días_libres <= 4` y `sueño <= 6,0`. Los casos 15–20 no se usan como entrada ni como condición de las reglas.
+**De dónde salen las reglas.** Se fijan con los casos **1–14 de entrenamiento**. Una primera versión con solo R1 detectaba los positivos 5 y 6, pero dejaba como falsos negativos los casos 2, 4 y 11. Como el falso negativo es el error más caro, agregamos R2: con eso los FN de entrenamiento bajan de **3 a 0** sin generar falsos positivos en entrenamiento. No agregamos nuevas reglas para corregir errores observados en los casos 15–20.
 
 **Variables que usa y por qué.**
 - **Días libres:** representa oportunidad de recuperación.
@@ -56,10 +55,10 @@ python T08_sistema.py <dias_libres> <horas_sueno> <partidas_oficiales> <horas_pr
 Por ejemplo:
 
 ```bash
-python T08_sistema.py 4 6.0 9 8
+python T08_sistema.py 1 8.0 21 6
 ```
 
-devuelve **SÍ**, porque activa **R3: pocos días libres + sueño bajo**.
+devuelve **SÍ**, porque activa **R1: carga competitiva alta + recuperación limitada**.
 
 **Dos casos de ejemplo.**
 
@@ -83,27 +82,31 @@ La lógica de decisión usa únicamente las cuatro variables disponibles en el m
 
 | | Predice SÍ | Predice NO |
 |---|---:|---:|
-| **Real SÍ** | VP = 3 | FN = 0 |
-| **Real NO** | FP = 1 | VN = 2 |
+| **Real SÍ** | VP = 2 | FN = 1 |
+| **Real NO** | FP = 0 | VN = 3 |
 
 | Métrica | Entrenamiento | Prueba |
 |---|---:|---:|
 | Exactitud | 100% | 83,3% |
-| Precisión | 100% | 75% |
-| Sensibilidad | 100% | 100% |
-| Especificidad | 100% | 66,7% |
+| Precisión | 100% | 100% |
+| Sensibilidad | 100% | 66,7% |
+| Especificidad | 100% | 100% |
 
-**Entrenamiento contra prueba.** El sistema pasa de **100% de exactitud en entrenamiento a 83,3% en prueba**. La sensibilidad se mantiene en **100%**, pero aparece un falso positivo y la especificidad baja a **66,7%**. Esto muestra **generalización parcial**: el sistema conserva la capacidad de detectar los positivos, que es lo prioritario por el costo del falso negativo, pero no generaliza perfectamente y comete más falsas alarmas en prueba. Además, la prueba tiene solo 6 casos sintéticos, por lo que el resultado no demuestra eficacia universal ni sobre jugadores reales.
+**Entrenamiento contra prueba.** El sistema pasa de **100% en entrenamiento a 83,3% en prueba**. En prueba mantiene precisión y especificidad de 100%, pero la sensibilidad baja a **66,7%** porque el caso 20 queda como falso negativo. Esto muestra **generalización parcial** y un límite real del sistema: las reglas aprendidas de entrenamiento no cubren todos los patrones positivos nuevos. No retocamos las reglas para corregir ese caso, porque hacerlo después de observar prueba contaminaría la evaluación.
 
 ## 4. El error más caro
 
 El error más caro es el **falso negativo**: predecir NO cuando el jugador realmente iba a sufrir una caída fuerte de rendimiento. Según la ficha, esto implica no detectar el agotamiento, que el jugador rinda mal y que incluso pueda dejar el equipo.
 
-Por ese motivo se prioriza la **sensibilidad** y se mantiene R3 como regla conservadora. R3 se justifica con entrenamiento: los positivos 4 y 11 presentan simultáneamente pocos días libres y sueño bajo, mientras que ningún negativo de los casos 1–14 cumple ambas condiciones. El costo de esa decisión es aceptar más falsos positivos si fuera necesario. En prueba, R3 permite no perder el caso 20 y la sensibilidad queda en 100%, mientras que el sistema acepta un falso positivo por R1. Un falso positivo tiene costo —dar descanso a quien estaba bien y perder ritmo—, pero su consecuencia es menos grave que ignorar un burnout real.
+**Qué cambiamos por ese error.** La primera versión tenía solo R1. Esa versión detectaba los positivos 5 y 6, pero dejaba **3 falsos negativos de entrenamiento**: 2, 4 y 11. Por el mayor costo del falso negativo agregamos **R2**, que combina muy pocos días libres con práctica alta. Con R1 + R2, los falsos negativos de entrenamiento bajan de **3 a 0**.
+
+En prueba aparece un nuevo patrón: el **caso 20** queda como falso negativo. Decidimos **no agregar una regla después de verlo**, porque eso sería ajustar el sistema sobre prueba. Lo reportamos como límite de generalización. Así priorizamos sensibilidad durante el diseño sin convertir la prueba en entrenamiento.
 
 ## 5. ¿Comparado contra qué?
 
-**Línea base trivial.** Como en entrenamiento hay 9 casos NO de 14, un sistema que respondiera siempre NO tendría **64,3% de exactitud** en entrenamiento, pero **0% de sensibilidad**: no detectaría ningún caso de riesgo. En prueba hay 3 NO de 6, por lo que la misma línea base tendría **50% de exactitud** y **0% de sensibilidad**. Nuestro sistema obtiene **83,3% de exactitud y 100% de sensibilidad** en prueba: supera la línea base y detecta los tres positivos, a costa de un falso positivo.
+**Línea base trivial.** Como en entrenamiento hay 9 casos NO de 14, un sistema que respondiera siempre NO tendría **64,3% de exactitud** en entrenamiento, pero **0% de sensibilidad**: no detectaría ningún caso de riesgo. En prueba hay 3 NO de 6, por lo que la misma línea base tendría **50% de exactitud** y **0% de sensibilidad**. Nuestro sistema obtiene **83,3% de exactitud y 66,7% de sensibilidad** en prueba: supera claramente la línea base, aunque todavía deja un falso negativo.
+
+
 
 | Checklist (Clase 6) | Respuesta |
 |---|---|
@@ -138,14 +141,17 @@ Los datos mensuales del jugador entran al sistema de reglas. El modelo produce S
 
 ### Aclaraciones posteriores a las corridas del evaluador
 
-**¿R2 predice agotamiento o mide cuánto entrena?** Las horas de práctica **no son burnout**. Son un **proxy de carga/compromiso** y R2 no las usa solas: exige además **2 o menos días libres**. La salida es una alerta para que el cuerpo técnico evalúe al jugador, no un diagnóstico automático.
+**¿R2 predice agotamiento o mide cuánto entrena?** Las horas de práctica no son burnout. Son un **proxy de carga/compromiso** y R2 no las usa solas: exige además **2 o menos días libres**. La salida es una alerta para evaluación del cuerpo técnico, no un diagnóstico automático.
 
-**¿Por qué mantener R3?** Porque el falso negativo es el error más caro y R3 tiene soporte en entrenamiento: casos 4 y 11 son positivos con pocos días libres + poco sueño, y ningún negativo de entrenamiento cumple ambas condiciones. Por eso es una regla conservadora coherente con el costo del error.
+**¿Qué cambiamos para cometer menos falsos negativos?** Agregamos R2 a una versión inicial que tenía solo R1. Eso redujo los FN de entrenamiento de **3 a 0**.
 
-**¿Qué pasa con el caso 20?** Con R3 se clasifica como SÍ. No usamos el número de caso ni el resultado real como entrada; el caso activa una regla general que ya puede justificarse con los casos 1–14. El efecto de priorizar sensibilidad se ve en prueba: no hay falsos negativos, aunque sí aparece un falso positivo por R1.
+**¿Qué pasa con el caso 20?** Queda como falso negativo en prueba. No lo corregimos agregando una regla nueva después de verlo porque eso sería ajustar sobre prueba y debilitaría la validez del benchmark.
 
-**¿Qué pasa con R1 cuando sueño o días libres son buenos?** R1 trata 20 o más partidas como señal suficiente de carga competitiva alta porque ese patrón separa positivos en entrenamiento. En prueba produce un falso positivo (caso 17), lo que muestra el costo de priorizar sensibilidad y que el sistema no generaliza perfectamente. Por eso la salida debe interpretarse como alerta y no como diagnóstico.
+**¿Qué pasó con R3?** Se probó en una iteración intermedia, pero se rechazó para la versión final porque mejoraba específicamente un error ya observado en prueba y era redundante para la matriz de entrenamiento. Quedó registrado como una decisión rechazada en la bitácora.
 
-### Corrida 2 del evaluador
+### Corridas contra el evaluador
 
-La corrida 2 obtuvo **9/10**. Detectó dos problemas: el README todavía contenía un comando que mencionaba una R3 inexistente, y la versión sin R3 decía priorizar sensibilidad aunque había quitado la regla que evitaba el falso negativo del caso 20. Se corrigieron ambas cosas: el comando y el código vuelven a estar sincronizados, y R3 se mantiene con justificación explícita basada en entrenamiento.
+| Corrida | Nota | Agujero que encontró | Qué cambiamos |
+|---|---:|---|---|
+| 1 | 9,5/10 | Faltaba explicar generalización y preguntó por posible ajuste a prueba. | Se explicitó la diferencia entre entrenamiento y prueba y se revisó el riesgo de leakage. |
+| 2 | 9/10 | README y código desincronizados; no quedaba claro qué cambio reducía falsos negativos. | Se sincronizó todo y se justificó R2 como cambio que baja FN de entrenamiento de 3 a 0; el caso 20 queda como límite de generalización. |
