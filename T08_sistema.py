@@ -1,9 +1,8 @@
 """
 T08 · ¿Este jugador profesional se quema en el split?
 
-Sistema de reglas para estimar riesgo de caída fuerte de rendimiento.
-Las reglas se justifican con los casos 1–14 de entrenamiento.
-Los casos 15–20 se usan para medir.
+Versión final: reglas fijadas con los casos 1–14 de entrenamiento.
+Los casos 15–20 se usan para medir y NO se usan para retocar el sistema.
 """
 
 import sys
@@ -14,19 +13,14 @@ def predecir_burnout(dias_libres, horas_sueno, partidas_oficiales, horas_practic
     Devuelve (prediccion, motivo), donde 1 = SÍ y 0 = NO.
     """
 
-    # R1: carga competitiva alta.
-    if partidas_oficiales >= 20:
-        return 1, "R1: carga competitiva alta (20 o más partidas oficiales)"
+    # R1: carga competitiva alta + recuperación limitada.
+    if partidas_oficiales >= 20 and (dias_libres <= 5 or horas_sueno <= 6.0):
+        return 1, "R1: carga competitiva alta + recuperación limitada"
 
     # R2: muy pocos días libres + práctica alta.
+    # Se agregó para reducir falsos negativos respecto de una versión inicial con solo R1.
     if dias_libres <= 2 and horas_practica >= 11:
         return 1, "R2: muy pocos días libres + práctica alta"
-
-    # R3: pocos días libres + sueño bajo.
-    # Justificación en entrenamiento: los casos 4 y 11 son positivos y
-    # ningún caso negativo de entrenamiento cumple simultáneamente ambas condiciones.
-    if dias_libres <= 4 and horas_sueno <= 6.0:
-        return 1, "R3: pocos días libres + sueño bajo"
 
     return 0, "Ninguna regla de riesgo se activó"
 
@@ -58,7 +52,6 @@ CASOS = [
 def medir(conjunto):
     filas = [c for c in CASOS if c[1] == conjunto]
     vp = vn = fp = fn = 0
-
     for _, _, dias, sueno, partidas, practica, real in filas:
         pred, _ = predecir_burnout(dias, sueno, partidas, practica)
         if real == 1 and pred == 1:
