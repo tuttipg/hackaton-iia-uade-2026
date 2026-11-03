@@ -6,6 +6,7 @@
 **IA declarada:** ChatGPT
 **Pista:** Reglas
 **Publicación en LinkedIn:** pendiente
+**Versión de entrega:** v4 · R1 + R2 · sin R3 · prueba no usada para ajustar reglas
 
 ---
 
@@ -150,3 +151,4 @@ Los datos mensuales del jugador entran al sistema de reglas. El modelo produce S
 |---|---:|---|---|
 | 1 | 9,5/10 | Faltaba explicar generalización y preguntó por posible ajuste a prueba. | Se explicitó la diferencia entre entrenamiento y prueba y se revisó el riesgo de leakage. |
 | 2 | 9/10 | README y código desincronizados; no quedaba claro qué cambio reducía falsos negativos. | Se sincronizó todo y se justificó R2 como cambio que baja FN de entrenamiento de 3 a 0; el caso 20 queda como límite de generalización. |
+| 3 | 8,5/10 | El evaluador recibió una versión anterior: volvió a señalar un ejemplo con R3, R1 sin condición de recuperación y falta de corrida 2. | Verificamos el README actual del fork, registramos esta corrida y agregamos una marca de versión visible para evitar volver a enviar contenido desactualizado. |
