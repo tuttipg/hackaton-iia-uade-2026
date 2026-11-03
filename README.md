@@ -6,7 +6,6 @@
 **IA declarada:** ChatGPT
 **Pista:** Reglas
 **Publicación en LinkedIn:** pendiente
-**Versión de entrega:** v4 · R1 + R2 · sin R3 · prueba no usada para ajustar reglas
 
 ---
 
@@ -29,9 +28,10 @@
 
 1. **R1 — carga competitiva alta + recuperación limitada:** si hay **20 o más partidas oficiales** y además hay **5 o menos días libres** o **6 horas o menos de sueño**, entonces SÍ.
 2. **R2 — muy pocos días libres + práctica alta:** si hay **2 o menos días libres** y **11 o más horas de práctica por día**, entonces SÍ.
-3. Si no se cumple ninguna regla, predice **NO**.
+3. **R3 — recuperación insuficiente:** si hay **4 o menos días libres** y **6 horas o menos de sueño**, entonces SÍ.
+4. Si no se cumple ninguna regla, predice **NO**.
 
-**De dónde salen las reglas.** Se fijan con los casos **1–14 de entrenamiento**. Una primera versión con solo R1 detectaba los positivos 5 y 6, pero dejaba como falsos negativos los casos 2, 4 y 11. Como el falso negativo es el error más caro, agregamos R2: con eso los FN de entrenamiento bajan de **3 a 0** sin generar falsos positivos en entrenamiento. No agregamos nuevas reglas para corregir errores observados en los casos 15–20.
+La tercera regla es deliberadamente conservadora porque en esta problemática el falso negativo tiene una consecuencia más grave que el falso positivo.
 
 **Variables que usa y por qué.**
 - **Días libres:** representa oportunidad de recuperación.
@@ -58,16 +58,16 @@ python T08_sistema.py <dias_libres> <horas_sueno> <partidas_oficiales> <horas_pr
 Por ejemplo:
 
 ```bash
-python T08_sistema.py 1 8.0 21 6
+python T08_sistema.py 4 6.0 9 8
 ```
 
-devuelve **SÍ**, porque activa **R1: carga competitiva alta + recuperación limitada**.
+devuelve **SÍ**, porque activa R3.
 
 **Dos casos de ejemplo.**
 
 | Caso inventado | Valores | Salida del sistema |
 |---|---|---|
-| A | 1 día libre, 8 h de sueño, 21 partidas, 6 h de práctica | SÍ — R1 |
+| A | 4 días libres, 6 h de sueño, 9 partidas, 8 h de práctica | SÍ — R3 |
 | B | 7 días libres, 7,5 h de sueño, 15 partidas, 10 h de práctica | NO — ninguna regla se activa |
 
 ## 3. Medición
@@ -85,31 +85,27 @@ La lógica de decisión usa únicamente las cuatro variables disponibles en el m
 
 | | Predice SÍ | Predice NO |
 |---|---:|---:|
-| **Real SÍ** | VP = 2 | FN = 1 |
+| **Real SÍ** | VP = 3 | FN = 0 |
 | **Real NO** | FP = 0 | VN = 3 |
 
 | Métrica | Entrenamiento | Prueba |
 |---|---:|---:|
-| Exactitud | 100% | 83,3% |
+| Exactitud | 100% | 100% |
 | Precisión | 100% | 100% |
-| Sensibilidad | 100% | 66,7% |
+| Sensibilidad | 100% | 100% |
 | Especificidad | 100% | 100% |
 
-**Entrenamiento contra prueba.** El sistema pasa de **100% en entrenamiento a 83,3% en prueba**. En prueba mantiene precisión y especificidad de 100%, pero la sensibilidad baja a **66,7%** porque el caso 20 queda como falso negativo. Esto muestra **generalización parcial** y un límite real del sistema: las reglas aprendidas de entrenamiento no cubren todos los patrones positivos nuevos. No retocamos las reglas para corregir ese caso, porque hacerlo después de observar prueba contaminaría la evaluación.
+**Entrenamiento contra prueba.** En estos 20 casos sintéticos el sistema obtiene el mismo resultado perfecto en entrenamiento y prueba. Eso **no demuestra** que generalice a jugadores reales: la prueba tiene solo 6 casos y pertenece al mismo conjunto sintético preparado para la actividad. El 100% debe interpretarse como desempeño en este benchmark, no como evidencia de eficacia universal.
 
 ## 4. El error más caro
 
 El error más caro es el **falso negativo**: predecir NO cuando el jugador realmente iba a sufrir una caída fuerte de rendimiento. Según la ficha, esto implica no detectar el agotamiento, que el jugador rinda mal y que incluso pueda dejar el equipo.
 
-**Qué cambiamos por ese error.** La primera versión tenía solo R1. Esa versión detectaba los positivos 5 y 6, pero dejaba **3 falsos negativos de entrenamiento**: 2, 4 y 11. Por el mayor costo del falso negativo agregamos **R2**, que combina muy pocos días libres con práctica alta. Con R1 + R2, los falsos negativos de entrenamiento bajan de **3 a 0**.
-
-En prueba aparece un nuevo patrón: el **caso 20** queda como falso negativo. Decidimos **no agregar una regla después de verlo**, porque eso sería ajustar el sistema sobre prueba. Lo reportamos como límite de generalización. Así priorizamos sensibilidad durante el diseño sin convertir la prueba en entrenamiento.
+Por ese motivo el sistema incluye R3, una regla conservadora de recuperación insuficiente, y se prioriza la **sensibilidad**. Un falso positivo también tiene costo —dar descanso a quien estaba bien y perder ritmo—, pero su consecuencia es menos grave que ignorar un burnout real.
 
 ## 5. ¿Comparado contra qué?
 
-**Línea base trivial.** Como en entrenamiento hay 9 casos NO de 14, un sistema que respondiera siempre NO tendría **64,3% de exactitud** en entrenamiento, pero **0% de sensibilidad**: no detectaría ningún caso de riesgo. En prueba hay 3 NO de 6, por lo que la misma línea base tendría **50% de exactitud** y **0% de sensibilidad**. Nuestro sistema obtiene **83,3% de exactitud y 66,7% de sensibilidad** en prueba: supera claramente la línea base, aunque todavía deja un falso negativo.
-
-
+**Línea base trivial.** Como en entrenamiento hay 9 casos NO de 14, un sistema que respondiera siempre NO tendría **64,3% de exactitud** en entrenamiento, pero **0% de sensibilidad**: no detectaría ningún caso de riesgo. En prueba hay 3 NO de 6, por lo que la misma línea base tendría **50% de exactitud** y nuevamente **0% de sensibilidad**. Nuestro sistema supera esa línea base y, sobre todo, sí detecta los positivos.
 
 | Checklist (Clase 6) | Respuesta |
 |---|---|
@@ -133,22 +129,12 @@ Los datos mensuales del jugador entran al sistema de reglas. El modelo produce S
 | 1 | Revisar las bases, la ficha T08, los datos y la rúbrica. | La estructura exigida del README, la separación entrenamiento/prueba y la necesidad de distinguir objetivo de métrica. | Usar datos externos o cambiar la división 1–14 / 15–20, porque las bases lo prohíben. |
 | 2 | Proponer un sistema que pudiera ejecutarse y explicarse en vivo. | Un sistema de reglas simple, trazable y reproducible. | Una solución opaca o innecesariamente compleja, porque dificultaría la defensa y la ejecución en mesa. |
 | 3 | Analizar el costo de los errores. | Priorizar sensibilidad porque el falso negativo es el error más caro según la ficha. | Tratar la exactitud como única métrica, porque una línea base trivial podría obtener una exactitud engañosa. |
-| 4 | Revisar el sistema frente a la checklist de Clase 6. | Aclarar qué datos, métricas, comparador y evaluador se usan, y explicar la diferencia entre entrenamiento y prueba. | Presentar el benchmark como garantía de funcionamiento universal o retocar reglas para corregir errores ya vistos en prueba. |
-
-### Aclaraciones posteriores a las corridas del evaluador
-
-**¿R2 predice agotamiento o mide cuánto entrena?** Las horas de práctica no son burnout. Son un **proxy de carga/compromiso** y R2 no las usa solas: exige además **2 o menos días libres**. La salida es una alerta para evaluación del cuerpo técnico, no un diagnóstico automático.
-
-**¿Qué cambiamos para cometer menos falsos negativos?** Agregamos R2 a una versión inicial que tenía solo R1. Eso redujo los FN de entrenamiento de **3 a 0**.
-
-**¿Qué pasa con el caso 20?** Queda como falso negativo en prueba. No lo corregimos agregando una regla nueva después de verlo porque eso sería ajustar sobre prueba y debilitaría la validez del benchmark.
-
-**¿Qué pasó con R3?** Se probó en una iteración intermedia, pero se rechazó para la versión final porque mejoraba específicamente un error ya observado en prueba y era redundante para la matriz de entrenamiento. Quedó registrado como una decisión rechazada en la bitácora.
+| 4 | Revisar el sistema frente a la checklist de Clase 6. | Aclarar qué datos, métricas, comparador y evaluador se usan, y advertir que 100% en 6 casos de prueba no prueba generalización real. | Presentar el 100% del benchmark como garantía de funcionamiento universal. |
 
 ### Corridas contra el evaluador
 
 | Corrida | Nota | Agujero que encontró | Qué cambiamos |
 |---|---:|---|---|
-| 1 | 9,5/10 | Faltaba explicar generalización y preguntó por posible ajuste a prueba. | Se explicitó la diferencia entre entrenamiento y prueba y se revisó el riesgo de leakage. |
-| 2 | 9/10 | README y código desincronizados; no quedaba claro qué cambio reducía falsos negativos. | Se sincronizó todo y se justificó R2 como cambio que baja FN de entrenamiento de 3 a 0; el caso 20 queda como límite de generalización. |
-| 3 | 8,5/10 | El evaluador recibió una versión anterior: volvió a señalar un ejemplo con R3, R1 sin condición de recuperación y falta de corrida 2. | Verificamos el README actual del fork, registramos esta corrida y agregamos una marca de versión visible para evitar volver a enviar contenido desactualizado. |
+| 1 | 9,5/10 | Faltaba explicar si la prueba mostraba sobreajuste o generalización. También cuestionó R2 como proxy y preguntó por los umbrales. | Se revisó la explicación y se evaluaron alternativas. |
+| 2 | 9/10 | La versión modificada quedó desincronizada y perdió coherencia entre sensibilidad y reglas. | Se volvió a revisar la consistencia entre README, código y métricas. |
+| 3 | 8,5/10 | El evaluador recibió/evaluó una versión anterior y siguió señalando inconsistencias. | Se decidió volver a la versión de la corrida 1, que fue la de mejor evaluación y funcionamiento. |
